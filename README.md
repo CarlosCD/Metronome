@@ -4,7 +4,7 @@ Very simple Terminal Metronome written in Ruby.
 
 Tested only on MacOS 11.2 with Ruby 3.0.0 but it probably works in other systems and versions of Ruby.
 
-It requires Ruby, which is usually pre-installed in most Mac or Linux machines. You can test if is present by running:
+It requires Ruby. It comes usually pre-installed in most Mac or Linux machines. You can verify that it is present by running:
 
     ruby -v
 
@@ -16,11 +16,11 @@ If the sound files `tick.wav`, `tock.wav` are not present in the folder you inst
 
 It also tries to install a sound library (Ruby gem), which would make the metronome a bit more precise (time-wise), than the MacOS player.
 
-1. Run it:
+1. Run it:  
     ./setup.rb
-2. Test the sounds
-    afplay ./tick.wav
-    afplay ./tock.wav
+2. Test the sounds  
+    afplay ./tick.wav  
+    afplay ./tock.wav  
 3. You are done!
 
 If you cannot execute `setup.rb`, it could be because the file does not have the execute flag set (`x` here):
@@ -48,11 +48,11 @@ The command tests your system and calculates the time interval to be used betwee
 
 An optional 2nd param (it requires the bpm param to have been set):
 
-  -h:  Help on usage
-  -d:  Debug mode, to show the interval time used and how is calculated
+    -h:  help on how to use it.
+    -d:  debug mode, to show the interval time used and how is calculated
 
 The debug mode displays times in milliseconds (1 second = 1,000 milliseconds).
 
-###Credits
+### Credits
 
-Initial idea found here, for a `bash` version: <https://community.unix.com/t/a-metronome/353150>
+Idea found here, for a `bash` version: <https://community.unix.com/t/a-metronome/353150>
