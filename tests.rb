@@ -1,20 +1,24 @@
-#!/usr/bin/env ruby --enable=jit
+#!/usr/bin/env -S ruby --enable=jit
 
-# It assumes the ruby2d gem, volume enabled fork, is installed
+# It assumes the ruby2d gem is present, the volume enabled fork
+require 'ruby2d'
 
 bpm = ARGV[0].to_i
 bpm = 90 if bpm == 0
 bpm = 24 if bpm < 24
 bpm = 250 if bpm > 250
 
+# ruby2d gem:
 TICK_SOUND = Sound.new('tick.wav')
 TOCK_SOUND = Sound.new('tock.wav')
 # Default volume is 100
 PLAY_TICK = ->(volume = 100) { TICK_SOUND.volume=volume; TICK_SOUND.play }
 PLAY_TOCK = ->(volume = 100) { TICK_SOUND.volume=volume; TOCK_SOUND.play }
+
 # # Not volume gem:
 # PLAY_TICK = ->(volume = nil) { TICK_SOUND.play }
 # PLAY_TOCK = ->(volume = nil) { TOCK_SOUND.play }
+
 # # No ruby2d gem at all, using Mac's afplay:
 # afplay: default normal volume is 1 (values 0-255 in logarithmic scale)
 # PLAY_TICK = ->(volume = 1) { `afplay ./tick.wav -v #{volume}` }
@@ -36,19 +40,19 @@ puts "Tock took #{sprintf('%.5f',tock_secs*1_000)} milliseconds to play."
 puts "Average:  #{sprintf('%.5f',sound_secs*1_000)} milliseconds"
 puts
 
-# (sound_secs + sleep_secs)*bpm in 60 secs
-#   => sound*bmp + sleep*bmp = 60
-#   => sleep = (60 - sound*bpm)/bpm = 60/bpm - sound
-CALCULATE_SLEEP = ->(sound_time = sound_secs) { (60.0/bpm) - sound_time }
-# We will also calculate the running average:
-# This lambda seems to take (in my machine) between 0.001 and 0.02 millisecs (JIT enabled, disabling GC doesn't seem to impact much):
-# CALCULATE_SLEEP = ->(sound_time = sound_secs, avg = 0.0, sample_size = 1) { t = (60.0/bpm) - sound_time;[ t, avg + (t - avg)/sample_size ] }
+# The CALCULATE_SLEEP lambda seems to take (in my machine) between 0.001 and 0.02 millisecs
+#   (JIT enabled, disabling GC doesn't seem to impact much):
 
-# puts "The interval between sounds will be of around #{CALCULATE_SLEEP.call.first*1_000} milliseconds (dynamically adjusted)."
+CALCULATE_SLEEP = ->(sound_time = sound_secs) { (60.0/bpm) - sound_time }
 puts "The interval between sounds will be of around #{sprintf('%.5f',CALCULATE_SLEEP.call*1_000)} milliseconds (dynamically adjusted)."
+
+# With running average:
+# CALCULATE_SLEEP = ->(sound_time = sound_secs, avg = 0.0, sample_size = 1) { t = (60.0/bpm) - sound_time;[ t, avg + (t - avg)/sample_size ] }
+# puts "The interval between sounds will be of around #{CALCULATE_SLEEP.call.first*1_000} milliseconds (dynamically adjusted)."
+
 puts
 
-puts 'Test of the CALCULATED_SLEEP lambda, 100 times:'
+puts 'Testing the CALCULATED_SLEEP lambda, 100 times:'
 mi = 100.0
 ma = 0.0
 GC.disable
@@ -56,7 +60,7 @@ GC.disable
   t0 = Time.now
   CALCULATE_SLEEP.call
   t = Time.now - t0
-  puts "Test #{sprintf('%00n',n)}: #{sprintf('%.50f',t*1_000)} millisecs"
+  puts "Test #{sprintf('%00d',n)}: #{sprintf('%.50f',t*1_000)} millisecs"
   mi = t if t < mi
   ma = t if ma < t
 end
@@ -70,7 +74,7 @@ puts 'Press Control & C to stop it...'
 
 # min = 100.0
 # max = 0.0
-average = 0.0
+# average = 0.0
 # sample_size = 0
 begin
   # GC.disable

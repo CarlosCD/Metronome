@@ -19,14 +19,14 @@ class Metronome
     # Arg #2, extra options:
     optional_param = args[1].to_s.downcase
     display_help = %w(-h -? --help).include?(optional_param)
-    @debug_mode = display_help || %w(-d --debug).include?(optional_param)
+    debug_mode = display_help || %w(-d --debug).include?(optional_param)
     # Help:
     if display_help
-      puts 'Usage: ./met.rb n option'
-      puts 'Where: n is an integer number between 30 and 180 (required if options is needed)'
-      puts '       option is only one flag, that could either be:'
-      puts '         -d, --debug   debug mode'
-      puts '         -h -? --help  print these help notes (it also enters in debug mode)'
+      puts 'Usage: ./met.rb n flag'
+      puts 'Where: n is an integer number between 24 and 250 (required if a flag is used)'
+      puts '       flag is one single option, that could be either:'
+      puts '         -d, --debug     debug mode'
+      puts '         -h, -?, --help  prints these help notes (and also enters in debug mode)'
       puts
     end
     # Sounds, lambdas to play each sound:
@@ -43,18 +43,13 @@ class Metronome
       end
     elsif RUBY_PLATFORM =~ /darwin/
       # afplay: default normal volume is 1 (values 0-255 in logarithmic scale)
-      @play_tick = ->(volume = 1) { `afplay ./tick.wav -v #{volume}` }
-      @play_tock = ->(volume = 1) { `afplay ./tock.wav -v #{volume}` }
+      @play_tick = ->(volume = 1) { `afplay -v #{volume} -q 1 ./tick.wav` }
+      @play_tock = ->(volume = 1) { `afplay -v #{volume} -q 1 ./tock.wav` }
     else
       puts 'Sorry, no luck... Maybe try to install the ruby2d gem, running "gem install ruby2d"'
       @can_play = false
     end
-    # Lambda to calculate the silence interval (sleep):
-    #   (sound_time + sleep_time)*bpm in 60 secs
-    #   => sound*bmp + sleep*bmp = 60
-    #   => sleep = (60 - sound*bpm)/bpm = 60/bpm - sound
-    @calculate_sleep = ->(sound_time = 0) { (60.0/@bpm) - sound_time }
-    debug_info if @debug_mode
+    debug_info if debug_mode
   end
 
   # Testing the time to play tick.wav & tock.wav in this system (volume at zero, if possible)
@@ -72,7 +67,7 @@ class Metronome
       puts "Tock takes around #{sprintf('%.5f',tock_secs*1_000)} milliseconds to play."
       puts "The average is    #{sprintf('%.5f',sound_secs*1_000)} milliseconds"
       puts
-      puts "The interval between sounds will be of around #{sprintf('%.5f',@calculate_sleep.call(sound_secs)*1_000)} "\
+      puts "The interval between sounds will be of around #{sprintf('%.5f',sleep_time(sound_secs)*1_000)} "\
            "milliseconds (dynamically adjusted)."
       puts
     end
@@ -111,6 +106,14 @@ class Metronome
     @can_play
   end
 
+  # Calculates the silence interval (sleep):
+  def sleep_time(sound_time, bpm = (@bpm || 90) )
+    #   (sound_time + sleep_time)*bpm in 60 secs
+    #   => sound*bmp + sleep*bmp = 60
+    #   => sleep = (60 - sound*bpm)/bpm = 60/bpm - sound
+    (60.0/bpm) - sound_time
+  end
+
   def play
     if can_play?
       show_bpm_info
@@ -119,10 +122,10 @@ class Metronome
         while true do
           t0 = Time.now
           @play_tick.call
-          sleep @calculate_sleep.call(Time.now - t0)
+          sleep sleep_time(Time.now - t0)
           t0 = Time.now
           @play_tock.call
-          sleep @calculate_sleep.call(Time.now - t0)
+          sleep sleep_time(Time.now - t0)
         end
       rescue Interrupt
         puts
