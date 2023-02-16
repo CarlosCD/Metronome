@@ -1,6 +1,6 @@
 #!/usr/bin/env -S ruby --enable=jit
 
-# It assumes the ruby2d gem is present, the volume enabled fork
+# It assumes the ruby2d gem is present
 require 'ruby2d'
 
 bpm = ARGV[0].to_i

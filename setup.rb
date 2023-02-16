@@ -12,9 +12,7 @@ has_2d = begin
 if has_2d
   puts 'You already had the "ruby2d" gem installed.'
 else
-  puts 'Installing the "ruby2d" gem with volume control...'
-  system 'gem install specific_install -v 0.3.8'
-  system 'gem specific_install -l  https://github.com/CarlosCD/ruby2d.git'
+  system 'gem install ruby2d -v 0.12.1'
 end
 puts
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env -S ruby --enable=jit
 
 class Metronome
-
   def initialize(args)
     @can_play = true
     @has_2d = begin
@@ -9,8 +8,6 @@ class Metronome
               rescue LoadError
                 false
               end
-    # The generic gem, or a volume-enabled fork?
-    @has_my_2d_fork = @has_2d && Sound.instance_methods.include?(:volume=)
     # Arg #1, Beats Per Minute:
     @bpm = args[0].to_i
     @bpm = 90 if @bpm == 0
@@ -33,20 +30,15 @@ class Metronome
     if @has_2d
       tick_sound = Sound.new('tick.wav')
       tock_sound = Sound.new('tock.wav')
-      if @has_my_2d_fork
-        # Default volume is 100
-        @play_tick = ->(volume = 100) { tick_sound.volume=volume; tick_sound.play }
-        @play_tock = ->(volume = 100) { tock_sound.volume=volume; tock_sound.play }
-      else
-        @play_tick = ->(volume = nil) { tick_sound.play }
-        @play_tock = ->(volume = nil) { tock_sound.play }
-      end
+      # Default volume is 100
+      @play_tick = ->(volume = 100) { tick_sound.volume=volume; tick_sound.play }
+      @play_tock = ->(volume = 100) { tock_sound.volume=volume; tock_sound.play }
     elsif RUBY_PLATFORM =~ /darwin/
       # afplay: default normal volume is 1 (values 0-255 in logarithmic scale)
       @play_tick = ->(volume = 1) { `afplay -v #{volume} -q 1 ./tick.wav` }
       @play_tock = ->(volume = 1) { `afplay -v #{volume} -q 1 ./tock.wav` }
     else
-      puts 'Sorry, no luck... Maybe try to install the ruby2d gem, running "gem install ruby2d"'
+      puts 'Sorry, no luck... Maybe try to install the ruby2d gem, running "gem install ruby2d -v 0.12.1"'
       @can_play = false
     end
     debug_info if debug_mode
@@ -77,7 +69,6 @@ class Metronome
     puts 'DEBUG mode is set'
     puts
     puts 'You ' + (@has_2d ? 'do' : 'do not') + ' seem to have the ruby2d gem!'
-    puts('  ... and the special version, volume-enabled.') if @has_my_2d_fork
     puts
     times_test
   end
@@ -139,7 +130,6 @@ class Metronome
   def self.play(args)
     Metronome.new(args).play
   end
-
 end
 
 Metronome.play(ARGV)
